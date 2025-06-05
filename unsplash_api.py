@@ -7,7 +7,11 @@ import os
 # For this example, we'll put it directly, but for production, use os.getenv()
 # Example: export UNSPLASH_ACCESS_KEY="YOUR_KEY_HERE" in your terminal
 # Or create a .env file and use a library like python-dotenv
-UNSPLASH_ACCESS_KEY = "nclui0hxy2aNNWnpDU9iJ0SNtIL539TiWc-aBOGuvM0" # <--- REPLACE THIS!
+ # <--- REPLACE THIS!
+
+ # ...existing code...
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+# ...existing code...
 
 if UNSPLASH_ACCESS_KEY == "YOUR_UNSPLASH_ACCESS_KEY":
     print("WARNING: Please replace 'YOUR_UNSPLASH_ACCESS_KEY' with your actual Unsplash Access Key.")
