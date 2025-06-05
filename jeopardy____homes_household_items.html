@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homes & Household Jeopardy</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #2d3748; /* Slightly lighter dark background for container */
+            border-radius: 1rem; /* Rounded corners */
+            padding: 2.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .input-section, .game-board, .question-display, .scoreboard {
+            background-color: #4a5568; /* Even lighter dark background for sections */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            background-color: #63b3ed; /* Blue for buttons */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn:hover {
+            background-color: #4299e1; /* Darker blue on hover */
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .category-header {
+            background-color: #2c5282; /* Darker blue for category headers */
+            color: white;
+            font-weight: 700;
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%; /* Ensure category headers take full height */
+            font-size: 1.125rem; /* text-lg */
+        }
+
+        .point-cell {
+            background-color: #81e6d9; /* Green for points */
+            color: #2d3748; /* Dark text for points */
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            font-size: 1.5rem; /* text-2xl */
+        }
+
+        .point-cell:hover:not(.answered) {
+            background-color: #4fd1c5; /* Darker green on hover */
+            transform: translateY(-2px);
+        }
+
+        .point-cell.answered {
+            background-color: #a0aec0; /* Grey for answered questions */
+            cursor: not-allowed;
+            color: #6b7280;
+            text-decoration: line-through;
+        }
+
+        .question-box {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .answer-box {
+            background-color: #2d3748;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            min-height: 80px;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 1.25rem;
+            color: #edf2f7; /* Light text for answer */
+            margin-top: 1rem;
+        }
+
+        .scoreboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .scoreboard-item.active-team {
+            background-color: #38a169; /* Green for active team */
+            font-weight: 700;
+            transform: scale(1.02);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+            .game-board {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+            }
+            .category-header, .point-cell {
+                font-size: 1rem;
+                padding: 0.75rem;
+            }
+            .question-box {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-board {
+                grid-template-columns: 1fr; /* Single column on very small screens */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen p-5">
+    <div class="container">
+        <!-- Team Setup Section -->
+        <div id="teamSetup" class="input-section">
+            <h2 class="text-2xl font-bold mb-4 text-center">Set Up Your Jeopardy Game!</h2>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+                <div class="flex flex-col">
+                    <label for="numTeams" class="mb-2 text-lg">Number of Teams:</label>
+                    <input type="number" id="numTeams" value="2" min="1" max="6"
+                           class="p-3 rounded-lg bg-gray-600 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <button id="startGameBtn" class="btn mt-4 md:mt-0">Start Game</button>
+            </div>
+        </div>
+
+        <!-- Game Area (hidden initially) -->
+        <div id="gameArea" class="hidden flex flex-col md:flex-row gap-8 w-full">
+            <!-- Scoreboard -->
+            <div class="scoreboard flex-shrink-0 w-full md:w-1/4">
+                <h2 class="text-xl font-bold mb-4 text-center">Scores 🏆</h2>
+                <div id="scoreboardList">
+                    <!-- Team scores will be rendered here -->
+                </div>
+                <div class="text-center mt-4 text-lg font-semibold" id="currentTurnText"></div>
+            </div>
+
+            <!-- Game Board and Question Display -->
+            <div class="flex-grow">
+                <!-- Game Board -->
+                <div id="gameBoard" class="game-board grid grid-cols-5 gap-4 mb-8">
+                    <!-- Categories and questions will be rendered here -->
+                </div>
+
+                <!-- Question Display -->
+                <div id="questionDisplay" class="question-display hidden">
+                    <div class="question-box" id="questionText"></div>
+                    <div class="answer-box" id="answerText"></div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4 mt-6">
+                        <button id="revealAnswerBtn" class="btn">Reveal Answer</button>
+                        <button id="correctBtn" class="btn bg-green-500 hover:bg-green-600 hidden">Correct! ✅</button>
+                        <button id="incorrectBtn" class="btn bg-red-500 hover:bg-red-600 hidden">Incorrect ❌</button>
+                        <button id="nextQuestionBtn" class="btn hidden">Back to Board</button>
+                    </div>
+                    <div id="messageBox" class="mt-4 p-3 bg-blue-700 text-white rounded-lg text-center hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state variables
+        let teams = [];
+        let currentTeamIndex = 0;
+        let currentQuestion = null;
+        let questionsAnsweredCount = 0;
+
+        // HTML elements
+        const teamSetupDiv = document.getElementById('teamSetup');
+        const gameAreaDiv = document.getElementById('gameArea');
+        const numTeamsInput = document.getElementById('numTeams');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const scoreboardList = document.getElementById('scoreboardList');
+        const currentTurnText = document.getElementById('currentTurnText');
+        const gameBoardDiv = document.getElementById('gameBoard');
+        const questionDisplayDiv = document.getElementById('questionDisplay');
+        const questionTextDiv = document.getElementById('questionText');
+        const answerTextDiv = document.getElementById('answerText');
+        const revealAnswerBtn = document.getElementById('revealAnswerBtn');
+        const correctBtn = document.getElementById('correctBtn');
+        const incorrectBtn = document.getElementById('incorrectBtn');
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        // Jeopardy data
+        const categories = [
+            {
+                name: "Homes Sweet Homes �",
+                questions: [
+                    { points: 100, question: "This type of multi-story dwelling usually has multiple units, often rented out.", answer: "Apartment building" },
+                    { points: 200, question: "A small, simple house, often found in rural areas, typically made of wood.", answer: "Cabin" },
+                    { points: 300, question: "What is a single-family home that shares one or more walls with adjacent houses, often in a row?", answer: "Townhouse (or Row house)" },
+                    { points: 400, question: "This portable, dome-shaped dwelling traditionally used by nomadic groups in Central Asia is covered with felt or skins.", answer: "Yurt" },
+                    { points: 500, question: "An underground dwelling, often carved into soft rock or earth, found in some arid regions.", answer: "Cave dwelling (or Dugout)" }
+                ]
+            },
+            {
+                name: "Inside Out 🛋️",
+                questions: [
+                    { points: 100, question: "This kitchen appliance is used for keeping food cold and fresh.", answer: "Refrigerator (or Fridge)" },
+                    { points: 200, question: "What is the furniture item used for sitting, often with armrests and cushions, typically found in a living room?", answer: "Sofa (or Couch)" },
+                    { points: 300, question: "This household item is a large, sturdy container used for washing clothes.", answer: "Washing machine" },
+                    { points: 400, question: "What is the term for a flexible pipe with a nozzle, used for watering plants or cleaning outdoors?", answer: "Garden hose" },
+                    { points: 500, question: "This small, portable device cleans surfaces and floors using suction.", answer: "Vacuum cleaner" }
+                ]
+            },
+            {
+                name: "Global Dwellings 🌎",
+                questions: [
+                    { points: 100, question: "A traditional tent-like shelter used by indigenous peoples of the Great Plains in North America.", answer: "Teepee (or Tipi)" },
+                    { points: 200, question: "This dwelling is made from blocks of snow and traditionally built by the Inuit people.", answer: "Igloo" },
+                    { points: 300, question: "What is a traditional Japanese house with sliding doors and tatami mats?", answer: "Minka" },
+                    { points: 400, question: "A house built on stilts, often over water or marshy ground, common in Southeast Asia.", answer: "Stilt house" },
+                    { points: 500, question: "These round, usually thatched, dwellings are found in many parts of Africa and are made from local materials.", answer: "Mud hut (or Roundhouse)" }
+                ]
+            },
+            {
+                name: "Home Hacks 💡",
+                questions: [
+                    { points: 100, question: "To prevent pipes from freezing in cold weather, you should let this flow at a slow drip.", answer: "Water (or Faucet)" },
+                    { points: 200, question: "What household substance is excellent for cleaning drains and removing stains, and is often used with baking soda?", answer: "Vinegar" },
+                    { points: 300, question: "This simple act can significantly reduce your electricity bill and is done by switching off lights when leaving a room.", answer: "Turning off lights" },
+                    { points: 400, question: "What is the best way to safely extinguish a small grease fire in a kitchen?", answer: "Cover it with a lid (or Baking soda)" },
+                    { points: 500, question: "To improve air quality indoors, you should regularly clean or replace these in your HVAC system.", answer: "Air filters" }
+                ]
+            },
+            {
+                name: "The Language of Home 📚",
+                questions: [
+                    { points: 100, question: "The process of moving into a new home is called 'relocation' or 'moving' and often involves this large vehicle.", answer: "Moving truck" },
+                    { points: 200, question: "What is the study and design of buildings?", answer: "Architecture" },
+                    { points: 300, question: "This person specializes in connecting buyers and sellers of real estate.", answer: "Real estate agent" },
+                    { points: 400, question: "A decorative framework used to support climbing plants, often over a walkway or patio.", answer: "Pergola" },
+                    { points: 500, question: "What is the legal document that transfers ownership of real estate from one party to another?", answer: "Deed" }
+                ]
+            }
+        ];
+
+        // --- Event Listeners ---
+        startGameBtn.addEventListener('click', startGame);
+        revealAnswerBtn.addEventListener('click', revealAnswer);
+        correctBtn.addEventListener('click', () => handleAnswer(true));
+        incorrectBtn.addEventListener('click', () => handleAnswer(false));
+        nextQuestionBtn.addEventListener('click', showGameBoard);
+
+        // --- Game Functions ---
+
+        function showMessage(msg, type = 'info') {
+            messageBox.textContent = msg;
+            messageBox.className = `mt-4 p-3 rounded-lg text-center`; // Reset classes
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-700', 'text-white');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-700', 'text-white');
+            } else {
+                messageBox.classList.add('bg-blue-700', 'text-white');
+            }
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        /**
+         * Initializes the game by setting up teams and displaying the game board.
+         */
+        function startGame() {
+            const numTeams = parseInt(numTeamsInput.value);
+            if (isNaN(numTeams) || numTeams < 1) {
+                showMessage("Please enter a valid number of teams (1 or more).", 'error');
+                return;
+            }
+
+            teams = [];
+            for (let i = 0; i < numTeams; i++) {
+                teams.push({ id: `team${i + 1}`, name: `Team ${i + 1}`, score: 0 });
+            }
+            currentTeamIndex = 0;
+            questionsAnsweredCount = 0;
+
+            teamSetupDiv.classList.add('hidden');
+            gameAreaDiv.classList.remove('hidden');
+
+            renderScoreboard();
+            renderGameBoard();
+            updateCurrentTurnText();
+            showMessage("Game started! Team 1, select a question.", 'info');
+        }
+
+        /**
+         * Renders the scoreboard based on the current teams' scores.
+         */
+        function renderScoreboard() {
+            scoreboardList.innerHTML = '';
+            teams.forEach((team, index) => {
+                const teamDiv = document.createElement('div');
+                teamDiv.id = team.id;
+                teamDiv.className = `scoreboard-item ${index === currentTeamIndex ? 'active-team' : ''} bg-gray-600 rounded-lg shadow mb-2`;
+                teamDiv.innerHTML = `
+                    <span class="text-lg font-semibold">${team.name}</span>
+                    <span class="text-xl font-bold">${team.score}</span>
+                `;
+                scoreboardList.appendChild(teamDiv);
+            });
+        }
+
+        /**
+         * Updates the text indicating which team's turn it is.
+         */
+        function updateCurrentTurnText() {
+            currentTurnText.textContent = `It's ${teams[currentTeamIndex].name}'s turn!`;
+        }
+
+        /**
+         * Renders the Jeopardy game board with categories and point values.
+         */
+        function renderGameBoard() {
+            gameBoardDiv.innerHTML = ''; // Clear previous board
+
+            // Create category headers
+            categories.forEach(category => {
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = category.name;
+                gameBoardDiv.appendChild(header);
+            });
+
+            // Create question cells
+            // Loop through points (e.g., 100, 200, 300, 400, 500)
+            // Then loop through categories to place the correct question
+            const points = [100, 200, 300, 400, 500];
+            points.forEach(point => {
+                categories.forEach((category, categoryIndex) => {
+                    const questionData = category.questions.find(q => q.points === point);
+                    const questionCell = document.createElement('div');
+                    questionCell.className = 'point-cell';
+                    questionCell.textContent = `$${point}`;
+                    questionCell.dataset.categoryIndex = categoryIndex;
+                    questionCell.dataset.point = point;
+
+                    if (questionData && questionData.answered) {
+                        questionCell.classList.add('answered');
+                        questionCell.textContent = ''; // Clear text if answered
+                    } else {
+                        questionCell.addEventListener('click', selectQuestion);
+                    }
+                    gameBoardDiv.appendChild(questionCell);
+                });
+            });
+        }
+
+        /**
+         * Handles the selection of a question from the game board.
+         * @param {Event} event - The click event.
+         */
+        function selectQuestion(event) {
+            const cell = event.target;
+            if (cell.classList.contains('answered')) {
+                showMessage("This question has already been answered. Please choose another.", 'info');
+                return;
+            }
+
+            const categoryIndex = parseInt(cell.dataset.categoryIndex);
+            const pointValue = parseInt(cell.dataset.point);
+
+            const category = categories[categoryIndex];
+            currentQuestion = category.questions.find(q => q.points === pointValue);
+
+            if (currentQuestion) {
+                questionTextDiv.innerHTML = currentQuestion.question; // Use innerHTML for emoji rendering
+                answerTextDiv.textContent = currentQuestion.answer;
+                answerTextDiv.style.display = 'none'; // Hide answer initially
+
+                revealAnswerBtn.classList.remove('hidden');
+                correctBtn.classList.add('hidden');
+                incorrectBtn.classList.add('hidden');
+                nextQuestionBtn.classList.add('hidden'); // Hide until question is done
+
+                gameBoardDiv.classList.add('hidden');
+                questionDisplayDiv.classList.remove('hidden');
+
+                // Mark the cell as selected (visually for now, will mark as answered later)
+                cell.classList.add('answered'); // Mark as answered immediately to prevent re-selection
+                cell.removeEventListener('click', selectQuestion); // Remove listener
+
+                currentQuestion.answered = true; // Mark question in data as answered
+                questionsAnsweredCount++;
+            }
+        }
+
+        /**
+         * Reveals the answer to the current question.
+         */
+        function revealAnswer() {
+            answerTextDiv.style.display = 'flex'; // Show answer
+            revealAnswerBtn.classList.add('hidden'); // Hide reveal button
+            correctBtn.classList.remove('hidden'); // Show correct/incorrect buttons
+            incorrectBtn.classList.remove('hidden');
+        }
+
+        /**
+         * Handles whether the current team answered correctly or incorrectly.
+         * @param {boolean} isCorrect - True if the answer was correct, false otherwise.
+         */
+        function handleAnswer(isCorrect) {
+            if (!currentQuestion) return;
+
+            const team = teams[currentTeamIndex];
+            if (isCorrect) {
+                team.score += currentQuestion.points;
+                showMessage(`${team.name} got it Correct! 🎉 +$${currentQuestion.points}`, 'success');
+            } else {
+                team.score -= currentQuestion.points; // Deduct points for incorrect answer
+                showMessage(`${team.name} got it Incorrect. 📉 -$${currentQuestion.points}`, 'error');
+            }
+
+            renderScoreboard(); // Update scoreboard immediately
+
+            // Move to next team's turn
+            currentTeamIndex = (currentTeamIndex + 1) % teams.length;
+            updateCurrentTurnText();
+
+            // Hide action buttons and show 'Back to Board'
+            correctBtn.classList.add('hidden');
+            incorrectBtn.classList.add('hidden');
+            nextQuestionBtn.classList.remove('hidden');
+
+            if (questionsAnsweredCount === categories.reduce((acc, cat) => acc + cat.questions.length, 0)) {
+                endGame();
+            }
+        }
+
+        /**
+         * Shows the game board after a question has been answered.
+         */
+        function showGameBoard() {
+            questionDisplayDiv.classList.add('hidden');
+            gameBoardDiv.classList.remove('hidden');
+            currentQuestion = null; // Clear current question
+            renderGameBoard(); // Re-render board to show answered questions
+        }
+
+        /**
+         * Ends the game and declares the winner(s).
+         */
+        function endGame() {
+            // Find the highest score
+            const maxScore = Math.max(...teams.map(team => team.score));
+            // Find all teams with the highest score
+            const winners = teams.filter(team => team.score === maxScore);
+
+            let message = "Game Over! 🥳\n";
+            if (winners.length === 1) {
+                message += `${winners[0].name} wins with a score of $${maxScore}!`;
+            } else {
+                message += `It's a tie! Winners are: ${winners.map(w => w.name).join(', ')} with $${maxScore} each!`;
+            }
+
+            // Display a modal-like message (using the messageBox for simplicity)
+            showMessage(message, 'info'); // Make it stick for longer
+            messageBox.style.display = 'block';
+            messageBox.style.backgroundColor = '#667eea'; // A nice purple for game over
+            messageBox.style.fontSize = '1.8rem';
+            messageBox.style.fontWeight = 'bold';
+            messageBox.style.position = 'absolute';
+            messageBox.style.top = '50%';
+            messageBox.style.left = '50%';
+            messageBox.style.transform = 'translate(-50%, -50%)';
+            messageBox.style.padding = '3rem';
+            messageBox.style.zIndex = '1000';
+            messageBox.style.width = 'fit-content';
+            messageBox.style.maxWidth = '90%';
+            messageBox.style.textAlign = 'center';
+            messageBox.style.boxShadow = '0 0 20px rgba(0,0,0,0.7)';
+
+            // Optionally, disable further interaction or offer a restart button
+            gameAreaDiv.classList.add('hidden');
+            // Show restart button
+            const restartBtn = document.createElement('button');
+            restartBtn.textContent = 'Play Again!';
+            restartBtn.className = 'btn mt-8 mx-auto';
+            restartBtn.onclick = () => {
+                location.reload(); // Simple way to restart the game
+            };
+            messageBox.appendChild(restartBtn);
+        }
+
+        // Initialize display on window load
+        window.onload = function() {
+            teamSetupDiv.classList.remove('hidden');
+            gameAreaDiv.classList.add('hidden');
+            questionDisplayDiv.classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
+�

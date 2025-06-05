@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rhyming Flashcards with Images</title>
+  <style>
+    body { text-align: center; font-family: sans-serif; margin-top: 50px; }
+    #card { font-size: 48px; margin-bottom: 20px; }
+    img { max-width: 200px; height: auto; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="card">Click to Start</div>
+  <img id="image" src="" alt="">
+  <br>
+  <button onclick="nextWord()">Next Word</button>
+
+  <script>
+    const rhymes = [
+      ["cat", "hat", "bat", "mat"],
+      ["dog", "log", "frog", "jog"],
+      ["man", "can", "fan", "pan"],
+      ["sun", "fun", "run", "bun"]
+    ];
+
+    function nextWord() {
+      const group = rhymes[Math.floor(Math.random() * rhymes.length)];
+      const word = group[Math.floor(Math.random() * group.length)];
+      document.getElementById("card").innerText = word;
+
+      // Use Pixabay-like image URL for demo purposes (not actual API)
+      const imgURL = `https://source.unsplash.com/200x200/?${word}`;
+      document.getElementById("image").src = imgURL;
+    }
+  </script>
+</body>
+</html>
+
