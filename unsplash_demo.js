@@ -50,7 +50,8 @@ const Body = () => {
         <div>{data.errors[0]}</div>
         <div>PS: Make sure to set your access token!</div>
       </div>
-    );
+    ); 
+    
   } else {
     return (
       <div className="feed">
